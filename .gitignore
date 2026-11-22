@@ -1,0 +1,28 @@
+# Rust build artifacts
+/target/
+**/*.rs.bk
+*.pdb
+
+# Rust/Cargo local state
+.cargo/
+.rustup/
+
+# Editor and IDE files
+.vscode/
+.idea/
+*.suo
+*.user
+*.sln.docstates
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs, temporary, and crash files
+*.log
+*.tmp
+*.temp
+*.pid
+*.lock
+
