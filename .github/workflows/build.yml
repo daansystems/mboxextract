@@ -1,0 +1,75 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "v*"
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            os: windows-latest
+            archive: zip
+            executable: mboxextract.exe
+          - name: macOS
+            os: macos-latest
+            archive: tar
+            executable: mboxextract
+          - name: Linux
+            os: ubuntu-latest
+            archive: tar
+            executable: mboxextract
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run tests
+        run: cargo test --locked
+
+      - name: Build release executable
+        run: cargo build --release --locked
+
+      - name: Create Windows archive
+        if: matrix.archive == 'zip'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path target/release/${{ matrix.executable }} -DestinationPath mboxextract-windows-x64.zip
+
+      - name: Create Unix archive
+        if: matrix.archive == 'tar'
+        shell: bash
+        run: |
+          tar -C target/release -czf mboxextract-${{ runner.os }}.tar.gz ${{ matrix.executable }}
+
+      - name: Upload Windows artifact
+        if: matrix.archive == 'zip'
+        uses: actions/upload-artifact@v7
+        with:
+          name: mboxextract-windows-x64
+          path: mboxextract-windows-x64.zip
+
+      - name: Upload Unix artifact
+        if: matrix.archive == 'tar'
+        uses: actions/upload-artifact@v7
+        with:
+          name: mboxextract-${{ runner.os }}
+          path: mboxextract-${{ runner.os }}.tar.gz
